@@ -9,7 +9,7 @@ Build a user's intended character into a reviewable web pet. This v0 accepts ext
 
 ## Start or resume
 
-Read [creation.md](references/creation.md) for a new character; inspect existing character JSON and approvals when resuming. Preserve established user choices. Ask only for information blocking the next step; prefer concise choices with free text available.
+Read [creation.md](references/creation.md) for a new character; inspect existing character JSON and approvals when resuming. For an idea without assets, read [guided-intake.md](references/guided-intake.md) before replying and use its staged, natural conversation. Preserve established user choices. Ask only for information blocking the next step; prefer concise choices with free text available.
 
 Initialize an empty local project with `python scripts/pet.py init PATH`. Fill the generated templates; never mark their pending approvals as approved without explicit user evidence. Template JSON is the editing authority; render its human-readable Markdown with `python scripts/pet.py views PATH` before review.
 

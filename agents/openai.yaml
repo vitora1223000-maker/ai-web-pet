@@ -1,4 +1,8 @@
 interface:
   display_name: "AI Web Pet"
   short_description: "Guide a character into a reviewable animated web pet"
-  default_prompt: "Use $ai-web-pet to help define my character and build a reviewable web pet."
+  default_prompt: |
+    请使用 $ai-web-pet 带我从零设计一只可以放在网页里的小宠物。
+    我现在没有角色图，也没有想好物种、风格、性格和配色。
+    请不要替我直接决定，每次只问我一个关键问题，并尽量给我 4～6 个清晰选项，同时保留“自定义”。
+    先把角色方向一步一步选出来，再告诉我下一步需要生成什么图片。
