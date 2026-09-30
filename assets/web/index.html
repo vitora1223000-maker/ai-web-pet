@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Web Pet Review</title>
+<style>
+body{font:16px system-ui;margin:24px;background:#eee;color:#222}button,select{font:inherit;margin:6px;padding:8px}#stage{min-height:360px;padding:40px;display:flex;align-items:center;justify-content:center;background:#222;overflow:visible}#stage.light{background:#fff}#stage.checker{background:conic-gradient(#ddd 25%,#fff 0 50%,#ddd 0 75%,#fff 0) 0 0/20px 20px}#error{color:#a00;white-space:pre-wrap}#status{overflow-wrap:anywhere}#viewport{position:relative}
+</style>
+<h1>Web Pet Review</h1><p>Candidate preview. Technical checks do not establish visual quality or user acceptance.</p>
+<label>Action <select id="actions"></select></label><button id="once">Play complete action once</button><button id="wait">Play / wait</button><button id="stop">Finish and return</button>
+<label>Background <select id="bg"><option>dark</option><option>light</option><option>checker</option></select></label>
+<label>Width <select id="size"><option value="1">Original</option><option value="80">80px</option><option value="120">120px</option><option value="160">160px</option></select></label>
+<div id="stage"><div id="viewport"><div id="pet"></div></div></div><p id="status"></p><pre id="error"></pre>
+<script type="module">
+import {loadPet} from './player.mjs';
+const $=id=>document.getElementById(id);
+try{
+ const pet=await loadPet({element:$('pet'),manifest:'./manifest.json'});
+ for(const id of Object.keys(pet.manifest.actions)){const o=document.createElement('option');o.value=id;o.textContent=id;$('actions').append(o);}
+ $('once').onclick=()=>pet.play($('actions').value,{once:true});
+ $('wait').onclick=()=>pet.play($('actions').value);
+ $('stop').onclick=()=>pet.requestStop();
+ $('bg').onchange=()=>$('stage').className=$('bg').value;
+ $('size').onchange=()=>{const h=pet.manifest.host,v=Number($('size').value),scale=v===1?1:v/h.width;$('pet').style.transform=`scale(${scale})`;$('pet').style.transformOrigin='top left';$('viewport').style.width=`${h.width*scale}px`;$('viewport').style.height=`${h.height*scale}px`;};
+ $('size').onchange();
+ $('status').textContent=`Build ${pet.manifest.build_id}`;
+ pet.events.addEventListener('state',e=>{$('status').textContent=`${e.detail.action} / ${e.detail.phase} — Build ${pet.manifest.build_id}`;});
+ addEventListener('pagehide',()=>pet.destroy(),{once:true});
+}catch(e){$('error').textContent=`Unable to load preview: ${e.message}`;}
+</script></html>

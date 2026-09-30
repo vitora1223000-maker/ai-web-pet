@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Web Pet"
+  short_description: "Guide a character into a reviewable animated web pet"
+  default_prompt: "Use $ai-web-pet to help define my character and build a reviewable web pet."

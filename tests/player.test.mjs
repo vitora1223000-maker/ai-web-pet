@@ -1,0 +1,16 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {Timeline,checkManifest} from '../assets/web/player.mjs';
+const fixture=()=>({schema_version:'0.1',ariaLabel:'fixture',host:{width:24,height:32,anchor:{x:12,y:28}},default_action:'idle',actions:{idle:{single:'i'},rest:{enter:'e',loop:'l',exit:'x'}},clips:Object.fromEntries(['i','e','l','x'].map(id=>[id,{width:24,height:32,anchor:{x:12,y:28},frames:{a:'a.png',b:'b.png'},sequence:['a','b'],durationsMs:[100,100],reduced_motion_frame:'a'}]))});
+test('complete three-part action once',()=>{const t=new Timeline(fixture(),()=>{});t.play('rest',{once:true},0);t.tick(200);assert.equal(t.phase,'loop');t.tick(400);assert.equal(t.phase,'exit');t.tick(600);assert.equal(t.action,'idle');});
+test('wait then safe stop during loop',()=>{const t=new Timeline(fixture(),()=>{});t.play('rest',{},0);t.tick(200);t.tick(400);assert.equal(t.phase,'loop');t.requestStop(450);t.tick(500);assert.equal(t.phase,'loop');t.tick(600);assert.equal(t.phase,'exit');t.tick(800);assert.equal(t.action,'idle');});
+test('stop enter skips loop',()=>{const t=new Timeline(fixture(),()=>{});t.play('rest',{},0);t.requestStop(50);t.tick(200);assert.equal(t.phase,'exit');});
+test('cancel prior action',()=>{const events=[];const t=new Timeline(fixture(),()=>{},(n,d)=>events.push([n,d.action]));t.play('rest',{once:true},0);t.play('idle',{},100);t.tick(600);assert.equal(t.action,'idle');assert(!events.some(([n,a])=>n==='complete'&&a==='rest'));});
+test('reduced mode stop and once finish',()=>{const t=new Timeline(fixture(),()=>{});t.reduced=true;t.play('rest',{once:true},0);t.tick(1);assert.equal(t.action,'idle');t.play('rest',{},10);t.requestStop(20);assert.equal(t.action,'idle');});
+test('preference changes mid-action',()=>{const t=new Timeline(fixture(),()=>{});t.play('rest',{once:true},0);t.setReduced(true,50);assert.equal(t.action,'idle');});
+test('frame timing and destroy',()=>{const draws=[];const t=new Timeline(fixture(),(c,id)=>draws.push(id));t.play('idle',{},0);t.tick(150);assert.equal(draws.at(-1),'b');t.destroy();assert.throws(()=>t.play('rest'));});
+test('invalid manifests fail clearly',()=>{checkManifest(fixture());for(const change of [m=>m.clips.i.sequence.push('z'),m=>m.clips.i.durationsMs[0]=0,m=>m.clips.i.frames.a='../x.png',m=>m.actions.rest.exit='absent']){const m=fixture();change(m);assert.throws(()=>checkManifest(m));}});
+test('reduced single action returns without explicit once',()=>{const m=fixture();m.actions.greet={single:'e'};const t=new Timeline(m,()=>{});t.reduced=true;t.play('greet',{},0);t.tick(1);assert.equal(t.action,'idle');});
+test('complete callback may select another action',()=>{let t;t=new Timeline(fixture(),()=>{},name=>{if(name==='complete')t.play('rest',{},500);});t.play('idle',{once:true},0);t.tick(200);assert.equal(t.action,'rest');});
+test('encoded traversal is rejected',()=>{const m=fixture();m.clips.i.frames.a='%2e%2e/x.png';assert.throws(()=>checkManifest(m));});
+test('loop boundary draws first frame immediately',()=>{const frames=[];const t=new Timeline(fixture(),(c,id)=>frames.push(id));t.play('idle',{},0);t.tick(150);t.tick(200);assert.equal(frames.at(-1),'a');});
